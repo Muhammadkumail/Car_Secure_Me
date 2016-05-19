@@ -1,5 +1,7 @@
 package com.felhr.serialportexample;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -9,12 +11,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -22,10 +26,31 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity{
+    GoogleCloudMessaging gcm;
+    String gcmId = "";
+    String sender_id = "1049349299390";
+    String strGcmId="";
+    SharedPreferences mNotification;
+    String possibleEmail = "";
 
     public static Context _context;
 
@@ -110,6 +135,41 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
         });
+        try {
+            Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
+
+            for (Account account : accounts) {
+
+                possibleEmail = account.name;
+            }
+        } catch (Exception e) {
+            Log.i("Exception", "Exception:" + e);
+        }
+
+        if (checkPreferences()==true) {
+
+
+            if (gcmId.length() == 0) {
+                new asyncTask_RegisterGCM().execute();
+            }
+            new asyncTask_RegisterWeb().execute();
+            Toast.makeText(MainActivity.this, "now registerd", Toast.LENGTH_SHORT).show();
+
+        }
+        else {
+            Toast.makeText(MainActivity.this, strGcmId, Toast.LENGTH_SHORT).show();
+
+        }
+
+
+    }
+    private Boolean checkPreferences() {
+        strGcmId = mSharedPreferences.getString("key_gcmId", "");
+
+        if (strGcmId.length()==0) {
+            return true;
+        }
+        return false;
     }
 //        LedOneOn.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -246,6 +306,66 @@ public class MainActivity extends AppCompatActivity{
                     break;
             }
         }
+    }
+
+    private class asyncTask_RegisterGCM extends AsyncTask<Void, Void, String> {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+
+                gcm = GoogleCloudMessaging.getInstance(_context);
+                gcmId = gcm.register(sender_id);
+                editor.putString("key_gcmId", gcmId.toString());
+                editor.commit();
+
+            } catch (IOException ex) {
+                return "Error:" + ex.getMessage();
+            }
+            return gcmId;
+        }
+
+    }
+
+    private class asyncTask_RegisterWeb extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... params) {
+            String msg = "";
+            try {
+                if (gcmId.length() > -0) {
+
+
+                    msg = registerDeviceToWebServer(gcmId, possibleEmail);
+
+                }
+            } catch (Exception ex) {
+                msg = "Error :" + ex.getMessage();
+            }
+            return msg;
+        }
+
+    }
+
+    public String registerDeviceToWebServer(String gcmId, String possibleEmail) {
+        String url = "http://friendsfashion.net/android/secureme/register.php";
+        String strResponse = "No response";
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(url);
+        try {
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            nameValuePairs.add(new BasicNameValuePair("device_gcm_id", gcmId));
+            //nameValuePairs.add(new BasicNameValuePair("device_type", "1"));
+            nameValuePairs.add(new BasicNameValuePair("device_email_address", possibleEmail));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            HttpResponse response = httpclient.execute(httppost);
+            strResponse = EntityUtils.toString(response.getEntity());
+        } catch (ClientProtocolException e) {
+            strResponse = e.getMessage();
+        } catch (IOException e) {
+            Log.e("IOException:", e.getMessage());
+            strResponse = e.getMessage();
+        }
+        return strResponse;
     }
 }
 

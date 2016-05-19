@@ -5,6 +5,8 @@
     <uses-feature android:name="android.hardware.usb.host" android:required="true"/>
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <application
         android:allowBackup="true"
@@ -31,5 +33,14 @@
             android:name="com.felhr.serialportexample.UsbService"
             android:enabled="true">
         </service>
+
+        <receiver android:name=".receiver.GCMreceiver">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.felhr.serialportexample" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".service.GCMservice" />
     </application>
 </manifest>
