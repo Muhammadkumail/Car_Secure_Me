@@ -32,7 +32,7 @@ public class GCMservice extends IntentService {
 
     Context context = this;
     public UsbService usbService;
-    String One = "1";
+//    String One = "1";
 
     public GCMservice() {
         super("GCMservice");
