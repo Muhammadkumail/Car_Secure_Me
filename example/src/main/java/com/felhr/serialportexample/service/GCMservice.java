@@ -29,8 +29,10 @@ import java.lang.ref.WeakReference;
 public class GCMservice extends IntentService {
     private NotificationManager mNotificationManager;
     NotificationCompat.Builder builder;
-    public UsbService usbService;
 
+    Context context = this;
+    public UsbService usbService;
+    String One = "1";
 
     public GCMservice() {
         super("GCMservice");
@@ -46,32 +48,10 @@ public class GCMservice extends IntentService {
         String strnotificaton_id = mBundle.getString("notification_id");
         int NOTIFICATION_ID = Integer.parseInt(strnotificaton_id);
         sendNotification(strMessage, strTtile, NOTIFICATION_ID);
-        if (strTtile.length()!=0) {
-            FuntionsClass call = new FuntionsClass();
-            call.CallOwner(this);
-        }
 
-
-
-
-
-
-
-
-//        try {
-//            usbService.write(strTtile.getBytes());
-//        } catch (Exception e) {
-//            Log.i(e.toString(), "error: ");
-//        }
 
     }
 
-    public void call()
-    {
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:0377778888"));
-        this.startActivity(callIntent);
-    }
     private void sendNotification(String msg, String title, int nofication_id) {
 
 
@@ -93,6 +73,18 @@ public class GCMservice extends IntentService {
                 .setAutoCancel(true);
         mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(nofication_id, mBuilder.build());
+
+
+//        try {
+//            usbService.write(One.getBytes());
+//            Toast.makeText(context, "Successfull" , Toast.LENGTH_LONG).show();
+//        }
+//
+//        catch (Exception ex)
+//        {
+//            Log.v("log", ex + " This is Arduino");
+//            Toast.makeText(context, ex+ "this is not shown"     , Toast.LENGTH_LONG).show();
+//        }
 
     }
 

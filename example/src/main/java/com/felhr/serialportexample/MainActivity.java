@@ -19,11 +19,6 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -44,18 +39,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
     GoogleCloudMessaging gcm;
     String gcmId = "";
     String sender_id = "354045635290";
-    String strGcmId="";
+    String strGcmId = "";
     String possibleEmail = "";
     public static Context _context;
     SharedPreferences mSharedPreferences;
-
     private UsbService usbService;
-    private TextView display;
-    private EditText editText;
     private MyHandler mHandler;
 
     /*
@@ -102,38 +94,9 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
         _context = this;
-
         mHandler = new MyHandler(this);
 
-        display = (TextView) findViewById(R.id.textView1);
-        editText = (EditText) findViewById(R.id.editText1);
-        Button sendButton = (Button) findViewById(R.id.buttonSend);
-
-        CheckBox Box = (CheckBox) findViewById(R.id.CheckBox_AutoCallReceive);
-
-        String strAutoCallReceive = mSharedPreferences.getString("AutoCall", "");
-
-        if (strAutoCallReceive == "ON") {
-            Box.setChecked(true);
-        } else {
-            Box.setChecked(false);
-        }
-
-
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!editText.getText().toString().equals("")) {
-                    String data = editText.getText().toString();
-                    if (usbService != null) { // if UsbService was correctly binded, Send data
-                        display.append(data+"\n");
-                        usbService.write(data.getBytes());
-                    }
-                }
-            }
-        });
 
         try {
             Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
@@ -146,7 +109,7 @@ public class MainActivity extends AppCompatActivity{
             Log.i("Exception", "Exception:" + e);
         }
 
-        if (checkPreferences()==true) {
+        if (checkPreferences() == true) {
 
 
             if (gcmId.length() == 0) {
@@ -155,50 +118,10 @@ public class MainActivity extends AppCompatActivity{
             new asyncTask_RegisterWeb().execute();
             Toast.makeText(MainActivity.this, "now registerd", Toast.LENGTH_SHORT).show();
 
-        }
-        else {
-            Toast.makeText(MainActivity.this, strGcmId, Toast.LENGTH_SHORT).show();
+        } else {
+//            Toast.makeText(MainActivity.this, strGcmId, Toast.LENGTH_SHORT).show();
 
         }
-
-
-    }
-
-    public void onCheckboxClicked(View view) {
-        // Is the view now checked?
-        boolean checked = ((CheckBox) view).isChecked();
-
-        // Check which checkbox was clicked
-        switch(view.getId()) {
-            case R.id.CheckBox_AutoCallReceive:
-                SharedPreferences.Editor editor = mSharedPreferences.edit();
-                if (checked) {
-                    editor.putString("AutoCall", "ON");
-                    editor.commit();
-                }
-                else
-                    editor.putString("AutoCall", "OFF");
-                    editor.commit();
-                break;
-        }
-    }
-
-
-    public void  RefreshArdunio(View view)
-    {
-        try {
-            String data = "3";
-//            display.setText("");
-            if (usbService != null) { // if UsbService was correctly binded, Send data
-//                        display.append(data);
-                usbService.write(data.getBytes());
-            }
-        }
-        catch (Exception ex)
-        {
-            Toast.makeText(MainActivity.this, ""+ex.toString(), Toast.LENGTH_SHORT).show();
-        }
-
     }
 
 
@@ -257,16 +180,14 @@ public class MainActivity extends AppCompatActivity{
 
             switch (msg.what) {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
-                    String data = (String) msg.obj;
-                    mActivity.get().display.append(data);
+//                    String data = (String) msg.obj;
+//                    mActivity.get().display.append(data);
 
                     try {
                         FuntionsClass call = new FuntionsClass();
                         call.CallOwner(_context);
-                    }
-                    catch (Exception ex)
-                    {
-                        mActivity.get().display.append(ex.toString());
+                    } catch (Exception ex) {
+//                        mActivity.get().display.append(ex.toString());
                     }
                     break;
             }
@@ -276,13 +197,15 @@ public class MainActivity extends AppCompatActivity{
     private Boolean checkPreferences() {
         strGcmId = mSharedPreferences.getString("key_gcmId", "");
 
-        if (strGcmId.length()==0) {
+        if (strGcmId.length() == 0) {
             return true;
         }
         return false;
     }
+
     private class asyncTask_RegisterGCM extends AsyncTask<Void, Void, String> {
         SharedPreferences.Editor editor = mSharedPreferences.edit();
+
         @Override
         protected String doInBackground(Void... params) {
             try {
