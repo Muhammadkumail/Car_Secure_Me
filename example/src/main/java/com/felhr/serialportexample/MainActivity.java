@@ -47,12 +47,11 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity{
     GoogleCloudMessaging gcm;
     String gcmId = "";
-    String sender_id = "1049349299390";
+    String sender_id = "354045635290";
     String strGcmId="";
-    SharedPreferences mNotification;
     String possibleEmail = "";
-
     public static Context _context;
+    SharedPreferences mSharedPreferences;
 
     /*
      * Notifications from UsbService will be received here.
@@ -95,7 +94,7 @@ public class MainActivity extends AppCompatActivity{
             usbService = null;
         }
     };
-    SharedPreferences mSharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -171,32 +170,67 @@ public class MainActivity extends AppCompatActivity{
         }
         return false;
     }
-//        LedOneOn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                    String data = "1";
-//                    if (usbService != null) { // if UsbService was correctly binded, Send data
-////                        display.append(data);
-//                        usbService.write(data.getBytes());
-//
-//                }
-//            }
-//        });
+    private class asyncTask_RegisterGCM extends AsyncTask<Void, Void, String> {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
 
-//        LedOneOff.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                String data = "2";
-//                if (usbService != null) { // if UsbService was correctly binded, Send data
-////                        display.append(data);
-//                    usbService.write(data.getBytes());
-//
-//                }
-//            }
-//        });
-//    }
+                gcm = GoogleCloudMessaging.getInstance(_context);
+                gcmId = gcm.register(sender_id);
+                editor.putString("key_gcmId", gcmId.toString());
+                editor.commit();
+
+            } catch (IOException ex) {
+                return "Error:" + ex.getMessage();
+            }
+            return gcmId;
+        }
+
+    }
+
+    private class asyncTask_RegisterWeb extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... params) {
+            String msg = "";
+            try {
+                if (gcmId.length() > -0) {
+
+
+                    msg = registerDeviceToWebServer(gcmId, possibleEmail);
+
+                }
+            } catch (Exception ex) {
+                msg = "Error :" + ex.getMessage();
+            }
+            return msg;
+        }
+
+    }
+
+    public String registerDeviceToWebServer(String gcmId, String possibleEmail) {
+        String url = "http://friendsfashion.net/android/secureme/register.php";
+        String strResponse = "No response";
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(url);
+        try {
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            nameValuePairs.add(new BasicNameValuePair("device_gcm_id", gcmId));
+            //nameValuePairs.add(new BasicNameValuePair("device_type", "1"));
+            nameValuePairs.add(new BasicNameValuePair("device_email_address", possibleEmail));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            HttpResponse response = httpclient.execute(httppost);
+            strResponse = EntityUtils.toString(response.getEntity());
+        } catch (ClientProtocolException e) {
+            strResponse = e.getMessage();
+        } catch (IOException e) {
+            Log.e("IOException:", e.getMessage());
+            strResponse = e.getMessage();
+        }
+        return strResponse;
+    }
+
+
 
 
     public void onCheckboxClicked(View view) {
@@ -308,65 +342,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private class asyncTask_RegisterGCM extends AsyncTask<Void, Void, String> {
-        SharedPreferences.Editor editor = mSharedPreferences.edit();
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
 
-                gcm = GoogleCloudMessaging.getInstance(_context);
-                gcmId = gcm.register(sender_id);
-                editor.putString("key_gcmId", gcmId.toString());
-                editor.commit();
-
-            } catch (IOException ex) {
-                return "Error:" + ex.getMessage();
-            }
-            return gcmId;
-        }
-
-    }
-
-    private class asyncTask_RegisterWeb extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... params) {
-            String msg = "";
-            try {
-                if (gcmId.length() > -0) {
-
-
-                    msg = registerDeviceToWebServer(gcmId, possibleEmail);
-
-                }
-            } catch (Exception ex) {
-                msg = "Error :" + ex.getMessage();
-            }
-            return msg;
-        }
-
-    }
-
-    public String registerDeviceToWebServer(String gcmId, String possibleEmail) {
-        String url = "http://friendsfashion.net/android/secureme/register.php";
-        String strResponse = "No response";
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(url);
-        try {
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-            nameValuePairs.add(new BasicNameValuePair("device_gcm_id", gcmId));
-            //nameValuePairs.add(new BasicNameValuePair("device_type", "1"));
-            nameValuePairs.add(new BasicNameValuePair("device_email_address", possibleEmail));
-            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-            HttpResponse response = httpclient.execute(httppost);
-            strResponse = EntityUtils.toString(response.getEntity());
-        } catch (ClientProtocolException e) {
-            strResponse = e.getMessage();
-        } catch (IOException e) {
-            Log.e("IOException:", e.getMessage());
-            strResponse = e.getMessage();
-        }
-        return strResponse;
-    }
 }
 
 

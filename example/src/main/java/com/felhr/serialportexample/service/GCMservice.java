@@ -10,14 +10,18 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.felhr.serialportexample.MainActivity;
 import com.felhr.serialportexample.MyNotification;
 import com.felhr.serialportexample.R;
+import com.felhr.serialportexample.UsbService;
 
-public class GCMservice  extends IntentService {
+public class GCMservice extends IntentService {
     private NotificationManager mNotificationManager;
     NotificationCompat.Builder builder;
+    public UsbService usbService;
 
     public GCMservice() {
         super("GCMservice");
@@ -35,7 +39,14 @@ public class GCMservice  extends IntentService {
         int NOTIFICATION_ID = Integer.parseInt(strnotificaton_id);
 
         sendNotification(strMessage, strTtile, NOTIFICATION_ID);
+        try {
+            usbService.write(strTtile.getBytes());
+        } catch (Exception e) {
+            Log.i(e.toString(), "error: ");
+        }
+
     }
+
     private void sendNotification(String msg, String title, int nofication_id) {
 
 
